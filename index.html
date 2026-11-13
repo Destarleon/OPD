@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OPD Patient Triage — DEMO (fake data)</title>
+<style>
+  :root {
+    --bg: #F3F5F4;
+    --surface: #FFFFFF;
+    --ink: #1D2624;
+    --muted: #5B6B68;
+    --primary: #1F6F6B;
+    --primary-ink: #FFFFFF;
+    --low: #3F8F5F;
+    --medium: #C98A2E;
+    --high: #B23A3A;
+    --border: #D8DEDC;
+    --low-bg: #E6F2EA;
+    --medium-bg: #FBEFDD;
+    --high-bg: #F7E3E3;
+    --yellow: #8F7300;
+    --yellow-bg: #F6EFC2;
+    --orange: #C4561A;
+    --orange-bg: #FBE3D4;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #11201E;
+      --surface: #16302C;
+      --ink: #EAF2F0;
+      --muted: #9DB3AE;
+      --primary: #55C9C1;
+      --primary-ink: #0A1D1B;
+      --low: #6BC78E;
+      --medium: #E3AA55;
+      --high: #E17373;
+      --border: #274541;
+      --low-bg: #16302A;
+      --medium-bg: #332A1A;
+      --high-bg: #35201F;
+      --yellow: #E8D060;
+      --yellow-bg: #353019;
+      --orange: #F0925A;
+      --orange-bg: #3A2418;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11201E;
+    --surface: #16302C;
+    --ink: #EAF2F0;
+    --muted: #9DB3AE;
+    --primary: #55C9C1;
+    --primary-ink: #0A1D1B;
+    --low: #6BC78E;
+    --medium: #E3AA55;
+    --high: #E17373;
+    --border: #274541;
+    --low-bg: #16302A;
+    --medium-bg: #332A1A;
+    --high-bg: #35201F;
+    --yellow: #E8D060;
+    --yellow-bg: #353019;
+    --orange: #F0925A;
+    --orange-bg: #3A2418;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    line-height: 1.45;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  header {
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0;
+    max-width: 62ch;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px;
+  }
+
+  .panel h2 {
+    font-size: 1.05rem;
+    margin: 0 0 16px;
+    font-weight: 600;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 9px 11px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .field input:focus-visible,
+  button:focus-visible,
+  .search input:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .field-hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 4px;
+    min-height: 1em;
+  }
+
+  button.primary {
+    width: 100%;
+    background: var(--primary);
+    color: var(--primary-ink);
+    border: none;
+    padding: 11px 16px;
+    border-radius: 7px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  button.primary:hover { filter: brightness(1.05); }
+
+  .error-text {
+    color: var(--high);
+    font-size: 0.85rem;
+    margin-top: 10px;
+    min-height: 1.1em;
+  }
+
+  .result-empty {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .result-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 14px;
+  }
+
+  .band {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+  }
+  .band.low { background: var(--low-bg); color: var(--low); }
+  .band.medlow { background: var(--medium-bg); color: var(--medium); }
+  .band.medium { background: var(--medium-bg); color: var(--medium); }
+  .band.high { background: var(--high-bg); color: var(--high); }
+  .band.green { background: var(--low-bg); color: var(--low); }
+  .band.yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .band.orange { background: var(--orange-bg); color: var(--orange); }
+  .band.red { background: var(--high-bg); color: var(--high); }
+
+  .demo-banner { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 0.88rem; font-weight: 600; margin-bottom: 14px; max-width: 760px; }
+  .check-row { margin-bottom: 12px; font-size: 0.85rem; color: var(--muted); }
+  .check-row label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+  .check-row input { margin-top: 3px; }
+
+  details.score-table { margin-top: 14px; font-size: 0.85rem; color: var(--muted); max-width: 760px; }
+  details.score-table summary { cursor: pointer; color: var(--primary); font-weight: 600; }
+  details.score-table table { margin: 10px 0; }
+  details.score-table td:first-child { font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+  .readout {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    font-size: 0.92rem;
+  }
+  .readout .k { color: var(--muted); font-family: ui-sans-serif, sans-serif; }
+  .readout .v { text-align: right; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  .disclaimer {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  .records {
+    margin-top: 22px;
+  }
+
+  .search input {
+    width: 100%;
+    padding: 9px 11px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.78rem;
+  }
+
+  td.num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.78rem;
+  }
+  .pill.low { background: var(--low-bg); color: var(--low); }
+  .pill.medlow { background: var(--medium-bg); color: var(--medium); }
+  .pill.medium { background: var(--medium-bg); color: var(--medium); }
+  .pill.high { background: var(--high-bg); color: var(--high); }
+  .pill.green { background: var(--low-bg); color: var(--low); }
+  .pill.yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .pill.orange { background: var(--orange-bg); color: var(--orange); }
+  .pill.red { background: var(--high-bg); color: var(--high); }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  .empty-state {
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 20px 0;
+    text-align: center;
+  }
+
+  .status-note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  #patientRows tr {
+    cursor: pointer;
+  }
+  #patientRows tr:hover {
+    background: var(--bg);
+  }
+
+  .history-panel {
+    margin-top: 22px;
+    display: none;
+  }
+  .history-panel.open {
+    display: block;
+  }
+  .history-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .history-head h2 {
+    margin: 0;
+  }
+  .history-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .history-controls select {
+    padding: 7px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.85rem;
+  }
+  button.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  button.ghost:hover {
+    background: var(--bg);
+  }
+  .chart-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+  .chart-wrap {
+    overflow-x: auto;
+  }
+  .chart-wrap svg text {
+    fill: var(--muted);
+    font-family: ui-sans-serif, sans-serif;
+    font-size: 11px;
+  }
+  .chart-wrap svg .bar-value {
+    fill: var(--ink);
+    font-weight: 600;
+  }
+  .history-note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  .report-title {
+    font-size: 1rem;
+    margin: 0 0 12px;
+    font-weight: 600;
+  }
+  .report-locked {
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  .report-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .field textarea,
+  .field select {
+    width: 100%;
+    padding: 9px 11px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .field textarea { resize: vertical; }
+  .field textarea:focus-visible,
+  .field select:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+  .records-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .records-head h2 { margin: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>OPD Patient Triage</h1>
+    <div class="demo-banner">DEMO — all patients here are fake. Please do not enter real patient information. Anything you add stays only in your own browser. <a href="#" id="resetDemo">Reset demo data</a></div>
+    <p class="subtitle">Scores an adult patient's vital signs with the Triage Early Warning Score (TEWS) from the South African Triage Scale, then saves the record for later search. Educational build — not for clinical use. The full SATS also uses clinical sign lists and extra checks (such as blood glucose) that this page does not include.</p>
+    <details class="score-table">
+      <summary>Scoring table used (adult TEWS) — for clinician review</summary>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><td>Mobility</td><td>Walking 0 · With help 1 · Stretcher/immobile 2</td></tr>
+            <tr><td>Respiratory rate</td><td>&lt;9: 2 · 9–14: 0 · 15–20: 1 · 21–29: 2 · &gt;29: 3</td></tr>
+            <tr><td>Heart rate</td><td>&lt;41: 2 · 41–50: 1 · 51–100: 0 · 101–110: 1 · 111–129: 2 · &gt;129: 3</td></tr>
+            <tr><td>Systolic BP</td><td>&lt;71: 3 · 71–80: 2 · 81–100: 1 · 101–199: 0 · &gt;199: 2</td></tr>
+            <tr><td>Temperature</td><td>&lt;35 °C: 2 · 35–38.4 °C: 0 · &gt;38.4 °C: 2</td></tr>
+            <tr><td>AVPU</td><td>Alert 0 · Confused 1 · Voice 1 · Pain 2 · Unresponsive 3</td></tr>
+            <tr><td>Trauma (48 h)</td><td>No 0 · Yes 1</td></tr>
+            <tr><td>Colour</td><td>0–2 Green (within 4 h) · 3–4 Yellow (within 1 h) · 5–6 Orange (within 10 min) · 7+ Red (immediate). Any emergency sign: Red.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The ranges come from the adult TEWS in the SATS training manual; the points per range follow that chart's column layout. Please check them against the official printed adult SATS chart before relying on them. Adapted from the Adult SATS chart © South African Triage Group / EMSSA, used under CC BY-NC-SA 3.0.</p>
+    </details>
+  </header>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>New Patient</h2>
+      <div class="field">
+        <label for="name">Patient name</label>
+        <input type="text" id="name" list="patientNamesList" placeholder="e.g. Kwame Mensah">
+        <datalist id="patientNamesList"></datalist>
+      </div>
+      <div class="field">
+        <label for="patientId">Patient ID</label>
+        <input type="text" id="patientId" placeholder="Leave blank for a new patient">
+        <div class="field-hint" id="idHint"></div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="height">Height (m)</label>
+          <input type="number" id="height" step="0.01" placeholder="1.70">
+        </div>
+        <div class="field">
+          <label for="weight">Weight (kg)</label>
+          <input type="number" id="weight" step="0.1" placeholder="70">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="temperature">Temperature (°C)</label>
+          <input type="number" id="temperature" step="0.1" placeholder="37.0">
+        </div>
+        <div class="field">
+          <label for="age">Age (yrs)</label>
+          <input type="number" id="age" step="1" placeholder="30">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="sp">Systolic BP (mmHg)</label>
+          <input type="number" id="sp" step="1" placeholder="118">
+        </div>
+        <div class="field">
+          <label for="dp">Diastolic BP (mmHg, recorded only)</label>
+          <input type="number" id="dp" step="1" placeholder="76">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="rr">Respiratory rate (breaths/min)</label>
+          <input type="number" id="rr" step="1" placeholder="16">
+        </div>
+        <div class="field">
+          <label for="hr">Heart rate (beats/min)</label>
+          <input type="number" id="hr" step="1" placeholder="80">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="mobility">Mobility</label>
+          <select id="mobility">
+            <option value="walking">Walking</option>
+            <option value="help">Walking with help</option>
+            <option value="stretcher">Stretcher / immobile</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="avpu">Consciousness (AVPU)</label>
+          <select id="avpu">
+            <option value="alert">Alert</option>
+            <option value="confused">Confused</option>
+            <option value="voice">Reacts to voice</option>
+            <option value="pain">Reacts to pain</option>
+            <option value="unresponsive">Unresponsive</option>
+          </select>
+        </div>
+      </div>
+      <div class="check-row"><label><input type="checkbox" id="trauma"> Injury in the past 48 hours (trauma)</label></div>
+      <div class="check-row"><label><input type="checkbox" id="emergencySign"> Emergency sign present: obstructed airway or not breathing, current seizure, facial or inhalation burn, glucose below 3 mmol/L, or cardiac arrest</label></div>
+      <button class="primary" id="saveBtn">Save Patient &amp; Calculate Score</button>
+      <div class="error-text" id="errorText"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Result</h2>
+      <div id="resultArea">
+        <p class="result-empty">Fill in the form and save a patient to see their triage score here.</p>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel records">
+    <div class="records-head">
+      <h2>Saved Patients</h2>
+      <button class="ghost" id="exportBtn" style="display:none;">Export all records (CSV)</button>
+    </div>
+    <div class="search">
+      <input type="text" id="searchInput" placeholder="Search by patient name or ID…">
+    </div>
+    <div class="table-wrap">
+      <table id="patientTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>ID</th>
+            <th>Age</th>
+            <th>BMI</th>
+            <th>Score</th>
+            <th>Risk</th>
+            <th>Recorded</th>
+          </tr>
+        </thead>
+        <tbody id="patientRows"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">No saved patients yet.</div>
+    </div>
+    <div class="status-note" id="statusNote"></div>
+  </section>
+
+  <section class="panel history-panel" id="historyPanel">
+    <div class="history-head">
+      <h2 id="historyName">Patient history</h2>
+      <div class="history-controls">
+        <select id="metricSelect">
+          <option value="total">Triage score</option>
+          <option value="sp">Systolic BP</option>
+          <option value="dp">Diastolic BP</option>
+          <option value="temperature">Temperature</option>
+          <option value="bmi">BMI</option>
+        </select>
+        <button class="ghost" id="closeHistoryBtn">Close</button>
+      </div>
+    </div>
+    <div class="chart-wrap" id="chartWrap"></div>
+    <div class="history-note" id="historyNote"></div>
+
+    <div class="divider"></div>
+    <h3 class="report-title">Doctor's Report <span style="font-weight:400;color:var(--muted);font-size:0.8rem;">(restricted to doctors and senior staff in the real version)</span></h3>
+    <div class="report-locked" id="reportLocked" style="display:none;"></div>
+    <div id="reportBody" style="display:none;">
+      <div class="field">
+        <label for="reportVisit">Visit</label>
+        <select id="reportVisit"></select>
+      </div>
+      <div class="report-meta" id="reportMeta"></div>
+      <div class="field">
+        <label for="reportDiagnosis">Diagnosis</label>
+        <input type="text" id="reportDiagnosis" placeholder="e.g. Suspected malaria">
+      </div>
+      <div class="field">
+        <label for="reportNotes">Clinical notes</label>
+        <textarea id="reportNotes" rows="4"></textarea>
+      </div>
+      <div class="field">
+        <label for="reportPlan">Treatment plan / prescription</label>
+        <textarea id="reportPlan" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label for="reportFollowUp">Follow-up</label>
+        <select id="reportFollowUp">
+          <option value="none">No follow-up needed</option>
+          <option value="urgent">Urgent review</option>
+          <option value="1w">In 1 week</option>
+          <option value="2w">In 2 weeks</option>
+          <option value="1m">In 1 month</option>
+        </select>
+      </div>
+      <button class="primary" id="saveReportBtn">Save Doctor's Report</button>
+      <div class="error-text" id="reportError"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ---------- Standalone demo shim: replaces Claude's hosted storage with this browser's localStorage ----------
+(function () {
+  var KEY = "opd_demo_db_v1";
+  var SEED = {"patients":{"demo-v01":{"patientId":"P-DEM01","name":"Ama Sample","height":1.65,"weight":62,"temperature":38.9,"sp":118,"dp":76,"age":34,"rr":22,"hr":112,"mobility":"walking","avpu":"alert","trauma":false,"emergencySign":false,"bmi":22.77318640955005,"sMob":0,"sRR":2,"sHR":2,"spScore":0,"tempScore":2,"sAVPU":0,"sTrauma":0,"total":6,"scoreSystem":"SATS-TEWS","riskKey":"orange","riskLabel":"Orange — very urgent","timestamp":1792755054667},"demo-v02":{"patientId":"P-DEM01","name":"Ama Sample","height":1.65,"weight":62,"temperature":37.8,"sp":120,"dp":78,"age":34,"rr":18,"hr":96,"mobility":"walking","avpu":"alert","trauma":false,"emergencySign":false,"bmi":22.77318640955005,"sMob":0,"sRR":1,"sHR":0,"spScore":0,"tempScore":0,"sAVPU":0,"sTrauma":0,"total":1,"scoreSystem":"SATS-TEWS","riskKey":"green","riskLabel":"Green — routine","timestamp":1793359854667},"demo-v03":{"patientId":"P-DEM01","name":"Ama Sample","height":1.65,"weight":61,"temperature":36.8,"sp":116,"dp":74,"age":34,"rr":14,"hr":78,"mobility":"walking","avpu":"alert","trauma":false,"emergencySign":false,"bmi":22.4058769513315,"sMob":0,"sRR":0,"sHR":0,"spScore":0,"tempScore":0,"sAVPU":0,"sTrauma":0,"total":0,"scoreSystem":"SATS-TEWS","riskKey":"green","riskLabel":"Green — routine","timestamp":1793964654667},"demo-v04":{"patientId":"P-DEM02","name":"Kofi Sample","height":1.74,"weight":88,"temperature":36.8,"sp":205,"dp":112,"age":58,"rr":24,"hr":105,"mobility":"help","avpu":"alert","trauma":false,"emergencySign":false,"bmi":29.065926806711587,"sMob":1,"sRR":2,"sHR":1,"spScore":2,"tempScore":0,"sAVPU":0,"sTrauma":0,"total":6,"scoreSystem":"SATS-TEWS","riskKey":"orange","riskLabel":"Orange — very urgent","timestamp":1794310254667},"demo-v05":{"patientId":"P-DEM03","name":"Efua Sample","height":1.6,"weight":55,"temperature":36.2,"sp":85,"dp":50,"age":27,"rr":28,"hr":125,"mobility":"stretcher","avpu":"confused","trauma":true,"emergencySign":false,"bmi":21.484374999999996,"sMob":2,"sRR":2,"sHR":2,"spScore":1,"tempScore":0,"sAVPU":1,"sTrauma":1,"total":9,"scoreSystem":"SATS-TEWS","riskKey":"red","riskLabel":"Red — emergency","timestamp":1794396654667},"demo-v06":{"patientId":"P-DEM04","name":"Kwame Sample","height":1.78,"weight":80,"temperature":36.7,"sp":124,"dp":80,"age":45,"rr":16,"hr":72,"mobility":"walking","avpu":"alert","trauma":false,"emergencySign":false,"bmi":25.24933720489837,"sMob":0,"sRR":1,"sHR":0,"spScore":0,"tempScore":0,"sAVPU":0,"sTrauma":0,"total":1,"scoreSystem":"SATS-TEWS","riskKey":"green","riskLabel":"Green — routine","timestamp":1794137454667},"demo-v07":{"patientId":"P-DEM05","name":"Abena Sample","height":1.58,"weight":70,"temperature":37.2,"sp":98,"dp":60,"age":71,"rr":20,"hr":104,"mobility":"help","avpu":"alert","trauma":false,"emergencySign":false,"bmi":28.040378144528116,"sMob":1,"sRR":1,"sHR":1,"spScore":1,"tempScore":0,"sAVPU":0,"sTrauma":0,"total":4,"scoreSystem":"SATS-TEWS","riskKey":"yellow","riskLabel":"Yellow — urgent","timestamp":1794483054667},"demo-v08":{"patientId":"P-DEM06","name":"Yaw Sample","height":1.8,"weight":72,"temperature":36.5,"sp":110,"dp":70,"age":19,"rr":16,"hr":96,"mobility":"help","avpu":"confused","trauma":false,"emergencySign":true,"bmi":22.22222222222222,"sMob":1,"sRR":1,"sHR":0,"spScore":0,"tempScore":0,"sAVPU":1,"sTrauma":0,"total":3,"scoreSystem":"SATS-TEWS","riskKey":"red","riskLabel":"Red — emergency","timestamp":1794552174667}},"reports":{"demo-v01":{"visitId":"demo-v01","patientId":"P-DEM01","diagnosis":"Sample diagnosis: febrile illness (demo)","notes":"Sample clinical notes for demonstration only.","plan":"Sample treatment plan text. Demo only, not medical advice.","followUp":"1w","updatedAt":1792758654667},"demo-v05":{"visitId":"demo-v05","patientId":"P-DEM03","diagnosis":"Sample diagnosis: lower-limb injury (demo)","notes":"Sample clinical notes for demonstration only.","plan":"Sample plan: urgent review (demo).","followUp":"urgent","updatedAt":1794400254667},"demo-v08":{"visitId":"demo-v08","patientId":"P-DEM06","diagnosis":"Sample diagnosis: low blood glucose (demo)","notes":"Sample clinical notes for demonstration only.","plan":"Sample plan text. Demo only, not medical advice.","followUp":"2w","updatedAt":1794555774667},"demo-v02":{"visitId":"demo-v02","patientId":"P-DEM01","diagnosis":"Sample diagnosis: recovering febrile illness (demo)","notes":"Sample clinical notes for demonstration only.","plan":"Sample plan text. Demo only, not medical advice.","followUp":"1w","updatedAt":1793363454667},"demo-v03":{"visitId":"demo-v03","patientId":"P-DEM01","diagnosis":"Sample diagnosis: resolved, no active problem (demo)","notes":"Sample clinical notes for demonstration only.","plan":"Sample plan text. Demo only, not medical advice.","followUp":"none","updatedAt":1793968254667},"demo-v04":{"visitId":"demo-v04","patientId":"P-DEM02","diagnosis":"Sample diagnosis: markedly raised blood pressure (demo)","notes":"Sample clinical notes for demonstration only.","plan":"Sample plan text. Demo only, not medical advice.","followUp":"1w","updatedAt":1794313854667},"demo-v06":{"visitId":"demo-v06","patientId":"P-DEM04","diagnosis":"Sample diagnosis: routine check-up, no concerns (demo)","notes":"Sample clinical notes for demonstration only.","plan":"Sample plan text. Demo only, not medical advice.","followUp":"1m","updatedAt":1794141054667},"demo-v07":{"visitId":"demo-v07","patientId":"P-DEM05","diagnosis":"Sample diagnosis: unwell older adult needing monitoring (demo)","notes":"Sample clinical notes for demonstration only.","plan":"Sample plan text. Demo only, not medical advice.","followUp":"1w","updatedAt":1794486654667}}};
+  var store;
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    return JSON.parse(JSON.stringify(SEED));
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+  store = load();
+  save();
+
+  function col(name) { return store[name] || (store[name] = {}); }
+  function collection(name) {
+    var order = null, dir = "asc", lim = Infinity;
+    var api = {
+      orderBy: function (f, d) { order = f; dir = d || "asc"; return api; },
+      limit: function (n) { lim = n; return api; },
+      get: async function () {
+        var arr = Object.keys(col(name)).map(function (id) { return { id: id, d: col(name)[id] }; });
+        if (order) arr.sort(function (a, b) { return dir === "desc" ? b.d[order] - a.d[order] : a.d[order] - b.d[order]; });
+        arr = arr.slice(0, lim);
+        return { docs: arr.map(function (x) { return { id: x.id, data: function () { return x.d; } }; }) };
+      },
+      add: async function (data) {
+        var id = "v" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        col(name)[id] = data; save();
+        return { id: id };
+      }
+    };
+    return api;
+  }
+  function doc(path) {
+    var parts = path.split("/"), c = parts[0], id = parts[1];
+    return {
+      get: async function () {
+        var d = col(c)[id];
+        return { exists: !!d, data: function () { return d; } };
+      },
+      set: async function (data) { col(c)[id] = data; save(); }
+    };
+  }
+  var dbShim = { collection: collection, doc: doc };
+  var userShim = {
+    canEdit: async function () { return true; },
+    id: async function () { return "demo-user"; },
+    profiles: async function () { return {}; }
+  };
+  var downloadsShim = {
+    save: async function (o) {
+      var blob = new Blob([o.data], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = o.filename;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+  };
+  window.claude = { use: async function (n) { return n === "db" ? dbShim : n === "user" ? userShim : n === "downloads" ? downloadsShim : null; } };
+  var reset = document.getElementById("resetDemo");
+  if (reset) reset.addEventListener("click", function (e) { e.preventDefault(); try { localStorage.removeItem(KEY); } catch (err) {} location.reload(); });
+})();
+</script>
+<script>
+// ---------- SATS adult Triage Early Warning Score (TEWS) ----------
+// Ranges follow the adult TEWS in the South African Triage Scale training manual (EMSSA, 2012).
+function scoreMobility(m) {
+  if (m === "stretcher") return 2;
+  if (m === "help") return 1;
+  return 0;
+}
+
+function scoreRR(rr) {
+  if (rr < 9) return 2;
+  if (rr <= 14) return 0;
+  if (rr <= 20) return 1;
+  if (rr <= 29) return 2;
+  return 3;
+}
+
+function scoreHR(hr) {
+  if (hr < 41) return 2;
+  if (hr <= 50) return 1;
+  if (hr <= 100) return 0;
+  if (hr <= 110) return 1;
+  if (hr <= 129) return 2;
+  return 3;
+}
+
+function scoreSystolicBP(sp) {
+  if (sp < 71) return 3;
+  if (sp <= 80) return 2;
+  if (sp <= 100) return 1;
+  if (sp <= 199) return 0;
+  return 2;
+}
+
+function scoreTemperature(t) {
+  if (t < 35) return 2;
+  if (t <= 38.4) return 0;
+  return 2;
+}
+
+function scoreAVPU(a) {
+  if (a === "unresponsive") return 3;
+  if (a === "pain") return 2;
+  if (a === "voice" || a === "confused") return 1;
+  return 0;
+}
+
+function riskBandFor(total, emergency) {
+  if (emergency || total >= 7) return { key: "red", label: "Red — emergency" };
+  if (total >= 5) return { key: "orange", label: "Orange — very urgent" };
+  if (total >= 3) return { key: "yellow", label: "Yellow — urgent" };
+  return { key: "green", label: "Green — routine" };
+}
+
+function targetTimeFor(key) {
+  const t = { red: "Immediately", orange: "Within 10 minutes", yellow: "Within 1 hour", green: "Within 4 hours" };
+  return t[key] || "—";
+}
+
+function computeBMI(weightKg, heightM) {
+  return weightKg / (heightM * heightM);
+}
+
+// ---------- DB wiring ----------
+let db = null;
+let allPatients = [];
+
+async function initDb() {
+  try {
+    db = await claude.use("db");
+  } catch (e) {
+    db = null;
+  }
+  await initAccess();
+  await loadPatients();
+}
+
+async function loadPatients() {
+  const statusNote = document.getElementById("statusNote");
+  if (!db) {
+    statusNote.textContent = "Storage isn't available in this view — records won't be saved between visits.";
+    renderTable(allPatients);
+    return;
+  }
+  try {
+    const snap = await db.collection("patients").orderBy("timestamp", "desc").limit(200).get();
+    allPatients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    statusNote.textContent = "";
+  } catch (e) {
+    statusNote.textContent = "Couldn't load saved patients right now.";
+  }
+  renderTable(allPatients);
+}
+
+async function savePatient(record) {
+  if (!db) {
+    record.id = "local-" + Date.now();
+    allPatients.unshift(record);
+    renderTable(filteredPatients());
+    refreshHistoryIfOpen(record.patientId);
+    return;
+  }
+  try {
+    const ref = await db.collection("patients").add(record);
+    record.id = ref.id;
+    allPatients.unshift(record);
+    renderTable(filteredPatients());
+    refreshHistoryIfOpen(record.patientId);
+  } catch (e) {
+    document.getElementById("errorText").textContent = "Couldn't save this record — please try again.";
+  }
+}
+
+function refreshHistoryIfOpen(id) {
+  if (currentHistoryId && currentHistoryId === id) {
+    renderHistoryChart();
+    renderReportSection();
+  }
+}
+
+// ---------- Rendering ----------
+function renderTable(list) {
+  const rowsEl = document.getElementById("patientRows");
+  const emptyEl = document.getElementById("emptyState");
+  rowsEl.innerHTML = "";
+  refreshNameDatalist();
+
+  if (!list.length) {
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  for (const p of list) {
+    const tr = document.createElement("tr");
+    const when = p.timestamp ? new Date(p.timestamp).toLocaleString() : "—";
+    tr.innerHTML = `
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.patientId)}</td>
+      <td class="num">${p.age}</td>
+      <td class="num">${p.bmi.toFixed(1)}</td>
+      <td class="num">${p.total}</td>
+      <td><span class="pill ${p.riskKey}">${p.riskLabel}</span></td>
+      <td>${when}</td>
+    `;
+    tr.addEventListener("click", () => showPatientHistory(p.patientId, p.name, p.id));
+    rowsEl.appendChild(tr);
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function refreshNameDatalist() {
+  const dl = document.getElementById("patientNamesList");
+  const seen = new Set();
+  dl.innerHTML = "";
+  for (const p of allPatients) {
+    const key = p.name.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      const opt = document.createElement("option");
+      opt.value = p.name;
+      dl.appendChild(opt);
+    }
+  }
+}
+
+function findPatientIdsByName(name) {
+  const key = name.trim().toLowerCase();
+  const ids = new Set();
+  for (const p of allPatients) {
+    if (p.name.toLowerCase() === key) ids.add(p.patientId);
+  }
+  return Array.from(ids);
+}
+
+function findLatestByPatientId(id) {
+  const key = id.trim().toUpperCase();
+  const matches = allPatients.filter(p => p.patientId === key);
+  if (!matches.length) return null;
+  return matches.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
+}
+
+function generatePatientId() {
+  return "P" + Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+function filteredPatients() {
+  const term = document.getElementById("searchInput").value.trim().toLowerCase();
+  if (!term) return allPatients;
+  return allPatients.filter(p =>
+    p.name.toLowerCase().includes(term) ||
+    (p.patientId && p.patientId.toLowerCase().includes(term))
+  );
+}
+
+// ---------- Patient history / vitals chart ----------
+let currentHistoryId = null;
+
+function recordsForPatient(id) {
+  return allPatients
+    .filter(p => p.patientId === id)
+    .slice()
+    .sort((a, b) => a.timestamp - b.timestamp);
+}
+
+function showPatientHistory(id, name, visitId) {
+  currentHistoryId = id;
+  document.getElementById("historyName").textContent = name + " (" + id + ") — visit history";
+  document.getElementById("historyPanel").classList.add("open");
+  renderHistoryChart();
+  renderReportSection(visitId);
+  document.getElementById("historyPanel").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function hidePatientHistory() {
+  currentHistoryId = null;
+  document.getElementById("historyPanel").classList.remove("open");
+}
+
+const METRICS = {
+  total:       { key: "total",       label: "Triage score", unit: "",     get: r => r.total },
+  sp:          { key: "sp",          label: "Systolic BP",  unit: "mmHg", get: r => r.sp },
+  dp:          { key: "dp",          label: "Diastolic BP", unit: "mmHg", get: r => r.dp },
+  temperature: { key: "temperature", label: "Temperature",  unit: "°C",   get: r => r.temperature },
+  bmi:         { key: "bmi",         label: "BMI",          unit: "",     get: r => r.bmi }
+};
+
+function riskColorVar(key) {
+  if (key === "low" || key === "green") return "var(--low)";
+  if (key === "high" || key === "red") return "var(--high)";
+  if (key === "yellow") return "var(--yellow)";
+  if (key === "orange") return "var(--orange)";
+  return "var(--medium)"; // older NEWS2 records: medlow and medium share the amber tone
+}
+
+function renderHistoryChart() {
+  const records = recordsForPatient(currentHistoryId);
+  const metricKey = document.getElementById("metricSelect").value;
+  const metric = METRICS[metricKey];
+  const noteEl = document.getElementById("historyNote");
+  const wrap = document.getElementById("chartWrap");
+
+  if (!records.length) {
+    wrap.innerHTML = "";
+    noteEl.textContent = "No visits found for this patient.";
+    return;
+  }
+
+  const systems = new Set(records.map(r => r.scoreSystem || "NEWS2"));
+  noteEl.textContent = records.length === 1
+    ? "Only one visit on record — add another visit for this patient to see a trend."
+    : (systems.size > 1 ? "Note: this patient has visits scored with different systems (earlier simplified NEWS2, later SATS TEWS), so the scores are not directly comparable." : "");
+
+  const titleHtml = `<div class="chart-title">${metric.label}${metric.unit ? " (" + metric.unit + ")" : ""} by visit</div>`;
+  wrap.innerHTML = titleHtml + buildBarChartSVG(records, metric);
+}
+
+function buildBarChartSVG(records, metric) {
+  const width = Math.max(420, records.length * 90);
+  const height = 220;
+  const padTop = 24;
+  const padBottom = 50;
+  const padLeft = 10;
+  const padRight = 10;
+  const chartH = height - padTop - padBottom;
+  const barW = Math.min(46, (width - padLeft - padRight) / records.length - 16);
+
+  const values = records.map(r => metric.get(r));
+  const maxVal = Math.max(...values, metric.key === "total" ? 10 : 1) * 1.15;
+
+  let bars = "";
+  records.forEach((r, i) => {
+    const val = metric.get(r);
+    const barH = maxVal > 0 ? (val / maxVal) * chartH : 0;
+    const slot = (width - padLeft - padRight) / records.length;
+    const x = padLeft + i * slot + (slot - barW) / 2;
+    const y = padTop + (chartH - barH);
+    const color = riskColorVar(r.riskKey);
+    const dateLabel = new Date(r.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+    bars += `
+      <rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="4" fill="${color}"></rect>
+      <text class="bar-value" x="${x + barW / 2}" y="${y - 6}" text-anchor="middle">${Number.isInteger(val) ? val : val.toFixed(1)}</text>
+      <text x="${x + barW / 2}" y="${height - padBottom + 18}" text-anchor="middle">${dateLabel}</text>
+    `;
+  });
+
+  return `
+    <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <line x1="${padLeft}" y1="${padTop + chartH}" x2="${width - padRight}" y2="${padTop + chartH}" stroke="var(--border)" />
+      ${bars}
+    </svg>
+  `;
+}
+
+function renderResult(record, isNewId) {
+  const band = { key: record.riskKey, label: record.riskLabel };
+  const area = document.getElementById("resultArea");
+  area.innerHTML = `
+    <div class="result-name">${escapeHtml(record.name)}</div>
+    <div class="band ${band.key}">${band.label}</div>
+    <div class="readout">
+      <span class="k">Patient ID</span><span class="v">${escapeHtml(record.patientId)}</span>
+      <span class="k">BMI</span><span class="v">${record.bmi.toFixed(1)}</span>
+      <span class="k">Mobility</span><span class="v">${record.sMob}</span>
+      <span class="k">Respiratory rate</span><span class="v">${record.sRR}</span>
+      <span class="k">Heart rate</span><span class="v">${record.sHR}</span>
+      <span class="k">Systolic BP</span><span class="v">${record.spScore}</span>
+      <span class="k">Temperature</span><span class="v">${record.tempScore}</span>
+      <span class="k">Consciousness (AVPU)</span><span class="v">${record.sAVPU}</span>
+      <span class="k">Trauma</span><span class="v">${record.sTrauma}</span>
+      <span class="k">Total TEWS</span><span class="v">${record.total}</span>
+      <span class="k">Target time to be seen</span><span class="v">${targetTimeFor(record.riskKey)}</span>
+      ${record.emergencySign ? '<span class="k">Emergency sign</span><span class="v">Yes (Red)</span>' : ''}
+    </div>
+    <div class="divider"></div>
+    ${isNewId ? `<div class="disclaimer">New patient ID generated: <strong>${escapeHtml(record.patientId)}</strong> — give this to the patient so future visits link to this record.</div><div class="divider"></div>` : ""}
+    <div class="disclaimer">Adult SATS Triage Early Warning Score, from vital signs only. The full SATS also uses clinical sign lists and extra checks such as blood glucose, and a senior healthcare professional can override the colour. Educational tool, not for clinical use. Adapted from the Adult SATS chart © South African Triage Group / EMSSA, CC BY-NC-SA 3.0.</div>
+  `;
+}
+
+// ---------- Doctor's report (restricted: only Editors/Owner can read or write, enforced by db rules) ----------
+let hasReportAccess = false;
+let currentUser = null;
+let myUserId = null;
+let reportLoadToken = 0;
+
+async function initAccess() {
+  try {
+    currentUser = await claude.use("user");
+    hasReportAccess = currentUser ? await currentUser.canEdit() : false;
+    myUserId = currentUser ? await currentUser.id() : null;
+  } catch (e) {
+    hasReportAccess = false;
+  }
+  hasReportAccess = true; // demo only: in the real version, reports need Editor access
+  document.getElementById("exportBtn").style.display = hasReportAccess ? "inline-block" : "none";
+}
+
+function setReportFields(r) {
+  document.getElementById("reportDiagnosis").value = r.diagnosis || "";
+  document.getElementById("reportNotes").value = r.notes || "";
+  document.getElementById("reportPlan").value = r.plan || "";
+  document.getElementById("reportFollowUp").value = r.followUp || "none";
+}
+
+async function renderReportSection(preferredVisitId) {
+  const locked = document.getElementById("reportLocked");
+  const body = document.getElementById("reportBody");
+  if (!hasReportAccess || !db) {
+    locked.textContent = !hasReportAccess
+      ? "This section is restricted to doctors and senior hospital staff."
+      : "Reports need storage, which isn't available in this view.";
+    locked.style.display = "block";
+    body.style.display = "none";
+    return;
+  }
+  locked.style.display = "none";
+  body.style.display = "block";
+
+  const visits = recordsForPatient(currentHistoryId).filter(v => v.id);
+  const sel = document.getElementById("reportVisit");
+  const wanted = preferredVisitId || sel.value;
+  sel.innerHTML = "";
+  visits.slice().reverse().forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v.id;
+    opt.textContent = new Date(v.timestamp).toLocaleString() + " — score " + v.total;
+    sel.appendChild(opt);
+  });
+  if (visits.some(v => v.id === wanted)) sel.value = wanted;
+  await loadReportForSelectedVisit();
+}
+
+async function loadReportForSelectedVisit() {
+  const token = ++reportLoadToken;
+  const visitId = document.getElementById("reportVisit").value;
+  const meta = document.getElementById("reportMeta");
+  const errEl = document.getElementById("reportError");
+  errEl.textContent = "";
+  meta.textContent = "";
+  setReportFields({});
+  if (!visitId) return;
+  try {
+    const snap = await db.doc("reports/" + visitId).get();
+    if (token !== reportLoadToken) return;
+    if (!snap.exists) {
+      meta.textContent = "No report written for this visit yet.";
+      return;
+    }
+    const r = snap.data();
+    setReportFields(r);
+    let who = "";
+    if (currentUser && r.authorId) {
+      const ps = await currentUser.profiles([r.authorId]);
+      who = ps[r.authorId] ? ps[r.authorId].name : "";
+    }
+    if (token !== reportLoadToken) return;
+    meta.textContent = "Last saved " + new Date(r.updatedAt).toLocaleString() + " by " + (who || "a clinician");
+  } catch (e) {
+    if (token !== reportLoadToken) return;
+    errEl.textContent = "Couldn't load the report for this visit.";
+  }
+}
+
+async function saveReport() {
+  const errEl = document.getElementById("reportError");
+  errEl.textContent = "";
+  const visitId = document.getElementById("reportVisit").value;
+  const diagnosis = document.getElementById("reportDiagnosis").value.trim();
+  if (!visitId) { errEl.textContent = "Choose a visit first."; return; }
+  if (!diagnosis) { errEl.textContent = "Enter a diagnosis."; return; }
+
+  const data = {
+    visitId,
+    patientId: currentHistoryId,
+    diagnosis,
+    notes: document.getElementById("reportNotes").value.trim(),
+    plan: document.getElementById("reportPlan").value.trim(),
+    followUp: document.getElementById("reportFollowUp").value,
+    authorId: myUserId,
+    updatedAt: Date.now()
+  };
+  try {
+    await db.doc("reports/" + visitId).set(data);
+    document.getElementById("reportMeta").textContent = "Saved " + new Date(data.updatedAt).toLocaleString() + " by you";
+  } catch (e) {
+    errEl.textContent = "Couldn't save the report — you may not have permission to write reports.";
+  }
+}
+
+// ---------- Export (Editors only) ----------
+function csvCell(v) {
+  let s = (v === null || v === undefined) ? "" : String(v);
+  // Stop spreadsheet apps from running text that starts like a formula
+  if (typeof v === "string" && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
+async function exportCsv() {
+  const note = document.getElementById("statusNote");
+  if (!hasReportAccess || !db) return;
+  const dl = await claude.use("downloads");
+  if (!dl) { note.textContent = "Downloads aren't available in this view."; return; }
+  note.textContent = "Preparing export…";
+  try {
+    const pSnap = await db.collection("patients").orderBy("timestamp", "desc").limit(1000).get();
+    const rSnap = await db.collection("reports").get();
+    const reports = {};
+    rSnap.docs.forEach(d => { reports[d.id] = d.data(); });
+
+    const header = ["Patient ID", "Name", "Age", "Height (m)", "Weight (kg)", "BMI", "Temperature (C)",
+      "Systolic BP", "Diastolic BP", "BP score", "Temp score", "Score total", "Scoring system", "Risk band", "Recorded (UTC)",
+      "Visit record ID", "Diagnosis", "Clinical notes", "Treatment plan", "Follow-up", "Report saved (UTC)",
+      "Respiratory rate", "Heart rate", "Mobility", "AVPU", "Trauma (48h)", "Emergency sign"];
+    const rows = pSnap.docs.map(d => {
+      const p = d.data();
+      const r = reports[d.id] || {};
+      return [p.patientId || "", p.name, p.age, p.height, p.weight, Number(p.bmi).toFixed(1), p.temperature,
+        p.sp, p.dp, p.spScore, p.tempScore, p.total, p.scoreSystem || "NEWS2 (simplified, BP + temp)", p.riskLabel, new Date(p.timestamp).toISOString(),
+        d.id, r.diagnosis || "", r.notes || "", r.plan || "", r.followUp || "",
+        r.updatedAt ? new Date(r.updatedAt).toISOString() : "",
+        p.rr, p.hr, p.mobility, p.avpu, p.trauma, p.emergencySign];
+    });
+    const csv = "\uFEFF" + [header].concat(rows).map(row => row.map(csvCell).join(",")).join("\r\n");
+    await dl.save({ filename: "opd-patient-records-" + new Date().toISOString().slice(0, 10) + ".csv", data: csv });
+    note.textContent = "";
+  } catch (e) {
+    note.textContent = (e && e.code === "declined") ? "" : "Couldn't export right now.";
+  }
+}
+
+// ---------- Form handling ----------
+document.getElementById("saveBtn").addEventListener("click", async () => {
+  const errorEl = document.getElementById("errorText");
+  errorEl.textContent = "";
+
+  const name = document.getElementById("name").value.trim();
+  const idInput = document.getElementById("patientId").value.trim().toUpperCase();
+  const height = parseFloat(document.getElementById("height").value);
+  const weight = parseFloat(document.getElementById("weight").value);
+  const temperature = parseFloat(document.getElementById("temperature").value);
+  const sp = parseFloat(document.getElementById("sp").value);
+  const dp = parseFloat(document.getElementById("dp").value);
+  const age = parseFloat(document.getElementById("age").value);
+  const rr = parseFloat(document.getElementById("rr").value);
+  const hr = parseFloat(document.getElementById("hr").value);
+  const mobility = document.getElementById("mobility").value;
+  const avpu = document.getElementById("avpu").value;
+  const trauma = document.getElementById("trauma").checked;
+  const emergencySign = document.getElementById("emergencySign").checked;
+
+  if (!name) { errorEl.textContent = "Enter a patient name."; return; }
+  if (!(height > 0)) { errorEl.textContent = "Enter a height greater than 0."; return; }
+  if (!(weight > 0)) { errorEl.textContent = "Enter a weight greater than 0."; return; }
+  if (Number.isNaN(temperature)) { errorEl.textContent = "Enter a temperature."; return; }
+  if (Number.isNaN(sp) || Number.isNaN(dp)) { errorEl.textContent = "Enter both blood pressure values."; return; }
+  if (!(age >= 0)) { errorEl.textContent = "Enter a valid age."; return; }
+  if (!(rr >= 0)) { errorEl.textContent = "Enter a respiratory rate."; return; }
+  if (!(hr >= 0)) { errorEl.textContent = "Enter a heart rate."; return; }
+  if (age <= 12 && height <= 1.5) { errorEl.textContent = "This tool uses the adult SATS chart (older than 12 years or taller than 150 cm). Paediatric charts aren't supported."; return; }
+
+  const isNewId = !idInput;
+  const patientId = idInput || generatePatientId();
+
+  const bmi = computeBMI(weight, height);
+  const sMob = scoreMobility(mobility);
+  const sRR = scoreRR(rr);
+  const sHR = scoreHR(hr);
+  const spScore = scoreSystolicBP(sp);
+  const tempScore = scoreTemperature(temperature);
+  const sAVPU = scoreAVPU(avpu);
+  const sTrauma = trauma ? 1 : 0;
+  const total = sMob + sRR + sHR + spScore + tempScore + sAVPU + sTrauma;
+  const band = riskBandFor(total, emergencySign);
+
+  const record = {
+    patientId, name, height, weight, temperature, sp, dp, age,
+    rr, hr, mobility, avpu, trauma, emergencySign,
+    bmi, sMob, sRR, sHR, spScore, tempScore, sAVPU, sTrauma, total,
+    scoreSystem: "SATS-TEWS",
+    riskKey: band.key, riskLabel: band.label,
+    timestamp: Date.now()
+  };
+
+  renderResult(record, isNewId);
+  await savePatient(record);
+
+  if (hasReportAccess && record.id) {
+    const reportBtn = document.createElement("button");
+    reportBtn.className = "ghost";
+    reportBtn.style.marginTop = "12px";
+    reportBtn.textContent = "Write doctor's report";
+    reportBtn.addEventListener("click", () => showPatientHistory(patientId, name, record.id));
+    document.getElementById("resultArea").appendChild(reportBtn);
+  }
+
+  // Reset form for the next patient, keep the result panel visible
+  ["name","patientId","height","weight","temperature","sp","dp","age","rr","hr"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("idHint").textContent = "";
+  document.getElementById("mobility").value = "walking";
+  document.getElementById("avpu").value = "alert";
+  document.getElementById("trauma").checked = false;
+  document.getElementById("emergencySign").checked = false;
+});
+
+document.getElementById("searchInput").addEventListener("input", () => {
+  renderTable(filteredPatients());
+});
+
+document.getElementById("metricSelect").addEventListener("change", renderHistoryChart);
+document.getElementById("closeHistoryBtn").addEventListener("click", hidePatientHistory);
+document.getElementById("reportVisit").addEventListener("change", loadReportForSelectedVisit);
+document.getElementById("saveReportBtn").addEventListener("click", saveReport);
+document.getElementById("exportBtn").addEventListener("click", exportCsv);
+
+document.getElementById("name").addEventListener("input", () => {
+  const name = document.getElementById("name").value;
+  const idField = document.getElementById("patientId");
+  const hint = document.getElementById("idHint");
+  if (!name.trim()) { hint.textContent = ""; return; }
+  const ids = findPatientIdsByName(name);
+  if (ids.length === 1) {
+    if (!idField.value) idField.value = ids[0];
+    hint.textContent = "Existing patient found — this visit will be added to ID " + ids[0] + ".";
+  } else if (ids.length > 1) {
+    hint.textContent = "Multiple patients share this name — enter their Patient ID manually.";
+  } else {
+    hint.textContent = "No existing patient with this name — a new ID will be generated.";
+  }
+});
+
+document.getElementById("patientId").addEventListener("input", () => {
+  const idVal = document.getElementById("patientId").value.trim();
+  const nameField = document.getElementById("name");
+  if (!idVal) return;
+  const match = findLatestByPatientId(idVal);
+  if (match && !nameField.value.trim()) {
+    nameField.value = match.name;
+  }
+});
+
+initDb();
+</script>
+</body>
+</html>
